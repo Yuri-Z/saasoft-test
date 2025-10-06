@@ -13,6 +13,11 @@ export interface iUser {
   login: string,
   password: string | null
 }
+
+export interface iRowUser extends Omit<iUser, 'marks'> {
+  marks: string
+}
+
 export const constEntityTypes: tEntityTypes[] = ['LDAP', 'Локальная']
 
 export const useUserStore = defineStore('userStore', () => {

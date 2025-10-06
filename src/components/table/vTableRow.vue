@@ -1,13 +1,13 @@
 <script lang="ts" setup>
 import {InputText, Select, Password, Button} from 'primevue'
-import {constEntityTypes, type iUser, type tEntityTypes} from '@/stores/user.ts'
+import {constEntityTypes, type iRowUser, type tEntityTypes} from '@/stores/user.ts'
 import {ref, watch} from 'vue'
 
 const props = defineProps(['user'])
 
 const emits = defineEmits(['onDelete', 'onUpdate'])
 
-const user: iUser = ref()
+const user = ref<iRowUser>({id: '', marks: '', type: 'Локальная', login: '', password: ''})
 const separator = ';'
 
 type tKey = 'marks' | 'type' | 'login' | 'password'
@@ -58,12 +58,14 @@ const checkEntityType = (type: tEntityTypes) => {
   }
 }
 
-const validate = (value: string, key: tKey) => {
+const validate = (value: string | null, key: tKey) => {
+  if (value === null) return isValid.value[key].status = key === 'password' && user.value.type === 'LDAP'
+  
   const rules = rulesCollection[key]
   const validated = {
     required: !rules.required() || !!value,
     pattern: !rules.pattern || !!value.match(rules.pattern),
-    length: !(rules.minLength && rules.maxLength) || value?.length >= rules.minLength && value?.length <= rules.maxLength || !rules.required() && !value
+    length: !(rules.minLength && rules.maxLength) || value.length >= rules.minLength && value?.length <= rules.maxLength || !rules.required() && !value
   }
   
   isValid.value[key].status = validated.required && validated.pattern && validated.length
@@ -71,7 +73,7 @@ const validate = (value: string, key: tKey) => {
   const overallValidation = Object.values(isValid.value).reduce((result, {status}) => result && status, true)
   
   const updatedUser = JSON.parse(JSON.stringify(user.value))
-  updatedUser.marks = user.value.marks.split(separator).map((textMark: string) => ({text: textMark}))
+  updatedUser.marks = (user.value.marks as string).split(separator).map((textMark: string) => ({text: textMark}))
   
   if (overallValidation && JSON.stringify(updatedUser) !== JSON.stringify(props.user)) {
     emits('onUpdate', updatedUser)
@@ -84,16 +86,20 @@ watch(() => props.user, (newValue, oldValue) => {
   if (JSON.stringify(newValue) === JSON.stringify(oldValue)) return
   
   user.value = JSON.parse(JSON.stringify(newValue))
-  user.value.marks = newValue.marks.reduce((accumulator: string, item: { text: string }) => `${accumulator}${item.text}${separator}`, '').slice(0, -1)
+  if (user.value) {
+    user.value.marks = newValue.marks
+      .reduce((accumulator: string, item: { text: string }) => `${accumulator}${item.text}${separator}`, '')
+      .slice(0, -1)
+  }
   
-  checkEntityType(user.value.type)
+  if (user.value) checkEntityType(user.value.type);
   
-  Object.keys(freshValidation).forEach((key: any) => {
+  (Object.keys(freshValidation) as tKey[]).forEach((key: tKey) => {
     validate(user.value[key], key)
   })
 }, {immediate: true, deep: true})
-watch(() => user.value.type, (newValue) => {
-  checkEntityType(newValue)
+watch(() => user.value?.type, (newValue) => {
+  if (newValue) checkEntityType(newValue)
 })
 
 </script>
