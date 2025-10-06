@@ -1,13 +1,11 @@
-export interface iUser {
-  id: string,
-  marks: string[],
-  type: 'LDAP' | 'Локальная',
-  login: string,
-  password: string | null
-}
+import {type iUser} from '@/stores/user.ts'
 
 export default {
   post: (users: iUser[]) => {
+    localStorage.setItem('users', JSON.stringify(users))
+  },
+
+  put: (users: iUser[]) => {
     localStorage.setItem('users', JSON.stringify(users))
   },
 
