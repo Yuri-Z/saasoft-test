@@ -37,7 +37,7 @@ const rulesCollection = {
     pattern: ''
   },
   password: {
-    required: () => user.value.type === 'Локальная',
+    required: () => user.value?.type === 'Локальная',
     minLength: 3,
     maxLength: 100,
     pattern: ''
@@ -52,9 +52,7 @@ const checkEntityType = (type: tEntityTypes) => {
     passIsRequired.value = false
     isValid.value.password.status = true
   } else {
-    if (!user.value.password) {
-      user.value.password = ''
-    }
+    if (!user.value.password) user.value.password = ''
     passIsRequired.value = true
     isValid.value.password.status = false
   }
@@ -120,7 +118,7 @@ watch(() => user.value.type, (newValue) => {
         @blur="validate(user.type, 'type')"
       />
     </td>
-    <td :colspan="passIsRequired ? 1 : 2">
+    <td>
       <InputText
         :invalid="!isValid.login.status"
         v-model="user.login"
@@ -130,7 +128,7 @@ watch(() => user.value.type, (newValue) => {
         @blur="validate(user.login, 'login')"
       />
     </td>
-    <td v-if="passIsRequired">
+    <td>
       <Password
         v-model="user.password"
         :feedback="false"
@@ -139,6 +137,7 @@ watch(() => user.value.type, (newValue) => {
         placeholder="Введите пароль"
         width="20%"
         @blur="validate(user.password, 'password')"
+        :disabled="!passIsRequired"
       />
     </td>
     <td>
