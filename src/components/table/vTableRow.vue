@@ -140,7 +140,7 @@ watch(() => user.value?.type, (newValue) => {
         :feedback="false"
         :invalid="!isValid.password.status"
         fluid
-        placeholder="Введите пароль"
+        :placeholder="passIsRequired ? 'Введите пароль' : ''"
         width="20%"
         @blur="validate(user.password, 'password')"
         :disabled="!passIsRequired"
